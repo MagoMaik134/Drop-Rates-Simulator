@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Drop Rates Simulator · Cazatesoros</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@500;700&family=Barlow+Condensed:ital,wght@0,700;1,800;1,900&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#eceffb;--card:#fff;--field:#f1f2fd;--ink:#1f1654;--muted:#5f5c8a;--line:#d9dcf2;--p1:#8a5cff;--p2:#5b2bd6;--gold-bg:#fff4cc;--gold-line:#efd77a;--gold-lbl:#8f6400;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0d0924;--card:#171039;--field:#211a4d;--ink:#f0ecff;--muted:#aca6d6;--line:#33286b;--gold-bg:#35290d;--gold-line:#66530f;--gold-lbl:#ffd45a}}
+:root[data-theme="dark"]{--bg:#0d0924;--card:#171039;--field:#211a4d;--ink:#f0ecff;--muted:#aca6d6;--line:#33286b;--gold-bg:#35290d;--gold-line:#66530f;--gold-lbl:#ffd45a}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Barlow",system-ui,sans-serif;font-weight:500;font-size:15px}
+.hd,.fn{font-family:"Barlow Condensed","Arial Narrow",Impact,sans-serif;font-style:italic;font-weight:900;text-transform:uppercase}
+main{max-width:1180px;margin:0 auto;padding:18px 14px 40px}
+header{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px}
+h1{margin:0;font-size:clamp(28px,5vw,40px);line-height:1}
+.sub{color:var(--muted);margin:4px 0 0}
+.badge{font-size:13px;font-weight:700;text-transform:uppercase;padding:6px 14px;border-radius:99px;background:var(--field);color:var(--muted);border:1px solid var(--line);white-space:nowrap}
+.badge.run{background:var(--p2);color:#fff;border-color:var(--p2)}
+.layout{display:grid;grid-template-columns:340px 1fr;gap:16px;align-items:start}
+@media(max-width:900px){.layout{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:16px}
+.card:last-child{margin-bottom:0}
+h2{margin:0 0 10px;font-size:13px;letter-spacing:1px;font-family:"Barlow",sans-serif;font-style:normal;font-weight:700;text-transform:uppercase;color:var(--muted)}
+.chips{display:grid;gap:6px}
+.chip{display:flex;align-items:center;gap:10px;width:100%;text-align:left;font:inherit;font-weight:700;color:var(--ink);background:var(--field);border:2px solid transparent;border-radius:10px;padding:9px 10px;cursor:pointer}
+.chip i{width:12px;height:12px;border-radius:3px;background:var(--rc);flex:none}
+.chip span{flex:1}.chip small{color:var(--muted);font-weight:700}
+.chip.on{border-color:var(--rc);background:color-mix(in srgb,var(--rc) 16%,var(--field))}
+.tabs{display:grid;grid-template-columns:1fr 1fr;background:var(--field);border-radius:10px;padding:4px;gap:4px;margin-bottom:12px}
+.tab{font:inherit;font-weight:700;border:0;padding:10px 6px;border-radius:8px;background:none;color:var(--muted);cursor:pointer}
+.tab.on{background:linear-gradient(var(--p1),var(--p2));color:#fff}
+label{display:block;font-size:12px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);margin:10px 0 4px}
+select{width:100%;font:inherit;font-weight:700;color:var(--ink);background:var(--field);border:1px solid var(--line);border-radius:10px;padding:10px;cursor:pointer}
+select:disabled{opacity:.45;cursor:not-allowed}
+select:focus-visible,.tab:focus-visible,.chip:focus-visible,.go:focus-visible{outline:3px solid var(--p1);outline-offset:2px}
+.go{margin-top:16px;width:100%;font-size:21px;padding:12px;border:0;border-radius:10px;color:#1f1654;background:#ffd93b;box-shadow:0 4px 0 #c6a300;cursor:pointer}
+.go:active{transform:translateY(3px);box-shadow:0 1px 0 #c6a300}
+.proj{background:var(--gold-bg);border:1px solid var(--gold-line);border-radius:12px;padding:14px 16px;display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.proj .t{grid-column:1/-1;font-size:12px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--gold-lbl)}
+@media(max-width:640px){.proj{grid-template-columns:1fr 1fr}}
+.k{font-size:12.5px;color:var(--muted)}
+.v{font-family:"Barlow Condensed",Impact,sans-serif;font-size:clamp(24px,4.5vw,32px);font-style:italic;font-weight:900;line-height:1.1;word-break:break-word}
+.pl{display:flex;justify-content:space-between;font-size:12px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.pl b{color:var(--p2)}
+:root[data-theme="dark"] .pl b{color:var(--p1)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .pl b{color:var(--p1)}}
+.bar{height:10px;background:var(--field);border-radius:99px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--p1),var(--p2))}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:14px}
+@media(max-width:640px){.stats{grid-template-columns:1fr 1fr}}
+.st{background:var(--field);border:1px solid var(--line);border-radius:10px;padding:12px}
+.st .l{font-size:11.5px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--muted)}
+.st .v{margin:4px 0 2px}
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:760px){.charts{grid-template-columns:1fr}}
+.charts .card{margin:0}
+.full{grid-column:1/-1}
+svg{width:100%;height:auto;display:block;overflow:hidden}
+svg text{fill:var(--muted);font:700 11px "Barlow",sans-serif}
+.gl{stroke:var(--line);stroke-width:1}
+.cap{color:var(--muted);font-size:13px;margin:6px 0 0}
+#mu{width:100%;font:inherit;font-weight:700;color:var(--ink);background:var(--field);border:1px solid var(--line);border-radius:10px;padding:10px}#mu:focus-visible{outline:3px solid var(--p1);outline-offset:2px}.mq{display:flex;gap:6px;margin-top:6px}
+.ni{width:100%;font:inherit;font-weight:700;color:var(--ink);background:var(--field);border:1px solid var(--line);border-radius:10px;padding:10px}.ni:focus-visible{outline:3px solid var(--p1);outline-offset:2px}.ni:disabled{opacity:.55;cursor:not-allowed}.lkf{display:grid;grid-template-columns:1fr 1fr;gap:12px}.verd{font-family:"Barlow Condensed",Impact,sans-serif;font-style:italic;font-weight:900;font-size:clamp(24px,5vw,34px);line-height:1.1;margin:16px 0 0}.mq button{flex:1;justify-content:center;width:auto}
+/* tema pirata */
+:root{--bg:#3aa6e6;--card:#f6e7bf;--field:#ecd69b;--ink:#3a2410;--muted:#7a5a35;--line:#c9a566;--p1:#ff6a4d;--p2:#c7301f;--gold-bg:#fde9a6;--gold-line:#d9b048;--gold-lbl:#8a5a00;--sea:linear-gradient(180deg,#8fd8ff 0,#3aa6e6 260px,#0f6fb8 100%)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#08203a;--card:#2b2116;--field:#3b2d1d;--ink:#f6e7c4;--muted:#cdb386;--line:#6d5330;--gold-bg:#4a3a14;--gold-line:#7a6220;--gold-lbl:#ffd45a;--sea:linear-gradient(180deg,#0b2a4a 0,#08203a 260px,#04101f 100%)}}
+:root[data-theme="dark"]{--bg:#08203a;--card:#2b2116;--field:#3b2d1d;--ink:#f6e7c4;--muted:#cdb386;--line:#6d5330;--gold-bg:#4a3a14;--gold-line:#7a6220;--gold-lbl:#ffd45a;--sea:linear-gradient(180deg,#0b2a4a 0,#08203a 260px,#04101f 100%)}
+body{background:var(--sea) fixed;background-color:var(--bg)}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.35;background:radial-gradient(circle at 50% 100%,transparent 0 13px,rgba(255,255,255,.35) 14px 16px,transparent 17px) 0 0/44px 22px}
+main{position:relative;z-index:1}
+.hd{font-family:"Pirata One","Barlow Condensed",serif;font-style:normal;font-weight:400;letter-spacing:1.5px}
+header h1{font-size:clamp(34px,6vw,52px);color:#fff;text-shadow:3px 3px 0 #0a3a68}
+.sub{color:#eaf7ff;text-shadow:1px 1px 0 #0a3a68}
+.ttlbox{display:grid;grid-template-columns:auto 1fr;column-gap:12px;align-items:center}
+.jr{grid-row:1/3;width:clamp(44px,8vw,64px);height:auto;filter:drop-shadow(2px 3px 0 #0a3a68)}
+.card{margin-inline:5px;border:2px solid var(--line);box-shadow:0 0 0 3px var(--card),0 0 0 5px var(--line),0 10px 20px rgba(0,0,0,.25);background-image:radial-gradient(rgba(122,90,53,.12) 1px,transparent 1.6px);background-size:9px 9px}
+h2{font-family:"Special Elite","Barlow",monospace;font-weight:400;letter-spacing:.8px}
+.bar i{background:linear-gradient(90deg,#ffd93b,#ff8a1f)}
+.go{color:#3a2410}
+.proj{border-style:dashed}
+.wp{margin:0 5px 18px;padding:16px 14px 14px;text-align:center;color:#3a2410;background:#ead29a;background-image:radial-gradient(rgba(90,60,20,.18) 1px,transparent 1.6px);background-size:8px 8px;border:3px solid #5a3a14;box-shadow:inset 0 0 0 4px #ead29a,inset 0 0 0 6px #5a3a14,0 10px 20px rgba(0,0,0,.3);transform:rotate(-1.2deg)}
+.wp1{font-family:"Pirata One",serif;font-size:46px;line-height:1;letter-spacing:3px}
+.wp2{font-family:"Special Elite",monospace;font-size:15px;margin:8px 0 10px;border-block:2px solid #5a3a14;padding:8px 4px;text-transform:uppercase}
+.wp3{font-family:"Special Elite",monospace;font-size:12px;letter-spacing:2px}
+.wp4{display:inline-block;font-family:"Barlow Condensed",Impact,sans-serif;font-style:italic;font-weight:900;font-size:30px;line-height:1.1;border-bottom:5px solid var(--rc,#c7301f);margin-top:2px}
+.wp5{font-family:"Special Elite",monospace;font-size:11px;margin-top:8px;opacity:.8}
+@media(prefers-reduced-motion:reduce){.wp{transform:none}}
+/* tipografía estilo Fortnite */
+body{font-family:"Barlow Condensed","Arial Narrow",Impact,sans-serif;font-weight:700;font-size:17px}
+.hd,h2,.wp1,.wp2,.wp3,.wp5{font-family:"Barlow Condensed","Arial Narrow",Impact,sans-serif;font-style:italic;font-weight:900;text-transform:uppercase}
+.hd{letter-spacing:.5px}
+header h1{font-size:clamp(36px,6.5vw,58px);line-height:.95}
+h2{letter-spacing:1px;font-size:16px}
+.wp1{font-size:52px;letter-spacing:2px}.wp2{font-size:19px}.wp3{font-size:14px;letter-spacing:2px}.wp5{font-size:13px;opacity:.8}
+.chip span,.tab{text-transform:uppercase;font-style:italic;font-weight:800}
+svg text{font:700 12px "Barlow Condensed",sans-serif}
+</style>
+</head>
+<body>
+<main>
+<header><div class="ttlbox"><svg class="jr" viewBox="0 0 64 64" aria-hidden="true"><g stroke="#2b1a0a" stroke-width="3" stroke-linecap="round"><line x1="10" y1="50" x2="54" y2="14" stroke="#f6e7c4" stroke-width="7"/><line x1="54" y1="50" x2="10" y2="14" stroke="#f6e7c4" stroke-width="7"/></g><ellipse cx="32" cy="29" rx="17" ry="16" fill="#f6e7c4" stroke="#2b1a0a" stroke-width="3"/><rect x="24" y="41" width="16" height="9" rx="3" fill="#f6e7c4" stroke="#2b1a0a" stroke-width="3"/><circle cx="25.5" cy="29" r="4.5" fill="#2b1a0a"/><circle cx="38.5" cy="29" r="4.5" fill="#2b1a0a"/><path d="M32 34l-3 5h6z" fill="#2b1a0a"/></svg><h1 class="hd">Drop Rates Simulator</h1><p class="sub">Cazatesoros · hasta 5.000.000 de jugadores independientes · resultados en vivo</p></div><span class="badge" id="badge">Listo</span></header>
+<div class="layout">
+<aside>
+  <div class="wp" id="wp"><div class="wp1">SE BUSCA</div><div class="wp2" id="wpn"></div><div class="wp3">RECOMPENSA</div><div class="wp4" id="wpo"></div><div class="wp5">Cazatesoros · una pieza por cofre</div></div>
+  <div class="card"><h2>Recompensa a simular</h2><div class="chips" id="chips"></div></div>
+  <div class="card">
+    <h2>Modo</h2>
+    <div class="tabs" role="tablist"><button class="tab on" role="tab" data-m="fixed">Cofres fijos</button><button class="tab" role="tab" data-m="luck">Mi suerte real</button></div>
+    <label for="nP">Número de jugadores</label><select id="nP"></select>
+    <label for="nC">Cofres por jugador</label><select id="nC"></select>
+    <label for="sq">Tamaño de la tripulación</label><select id="sq"></select><p class="cap" id="sqn"></p><label for="tI">Tiempo entre cofres</label><select id="tI"></select>
+    <label for="mu">Multiplicador de probabilidad (hipotético)</label><input id="mu" type="number" min="0.01" step="any" value="1"><div class="mq"><button class="chip" data-mu="1">x1</button><button class="chip" data-mu="2">x2</button><button class="chip" data-mu="5">x5</button><button class="chip" data-mu="10">x10</button></div>
+    <label for="sp">Velocidad de presentación</label><select id="sp"></select>
+    <button class="go fn" id="go">Iniciar simulación</button>
+  </div>
+</aside>
+<section>
+  <div class="card" id="simc"><h2 id="ttl"></h2>
+    <div class="proj"><div class="t">Proyección teórica</div>
+      <div><div class="k" id="k1"></div><div class="v" id="v1"></div></div>
+      <div><div class="k" id="k2"></div><div class="v" id="v2"></div></div>
+      <div><div class="k" id="k3"></div><div class="v" id="v3"></div></div>
+      <div><div class="k" id="k4"></div><div class="v" id="v4"></div></div></div>
+    <div class="pl" style="margin-top:16px"><span>Jugadores simulados</span><b id="pt">0 / 0</b></div>
+    <div class="bar"><i id="pb"></i></div>
+    <div class="stats">
+      <div class="st"><div class="l" id="l1"></div><div class="v" id="s1">–</div><div class="k" id="d1"></div></div>
+      <div class="st"><div class="l" id="l2"></div><div class="v" id="s2">–</div><div class="k" id="d2"></div></div>
+      <div class="st"><div class="l" id="l3"></div><div class="v" id="s3">–</div><div class="k" id="d3"></div></div>
+      <div class="st"><div class="l" id="l4"></div><div class="v" id="s4">–</div><div class="k" id="d4"></div></div>
+    </div>
+  </div>
+  <div class="charts" id="chs">
+    <div class="card"><h2>Probabilidad acumulada según cofres abiertos</h2><svg id="c1" viewBox="0 0 600 260" role="img" aria-label="Curva de probabilidad acumulada"></svg><p class="cap">Probabilidad de conseguir la recompensa al menos una vez. Los puntos marcan el 50%, 90% y 99%.</p></div>
+    <div class="card"><h2 id="h2c">Convergencia</h2><svg id="c2" viewBox="0 0 600 260" role="img" aria-label="Convergencia de la simulación"></svg><p class="cap" id="cap2"></p></div>
+    <div class="card full" id="hc" hidden><h2>Distribución de cofres necesarios por jugador</h2><svg id="c3" viewBox="0 0 1200 260" role="img" aria-label="Histograma de cofres necesarios"></svg><p class="cap">Barras: jugadores simulados. Línea: distribución teórica (geométrica).</p></div>
+  </div>
+  <div class="card" id="lk" style="display:none"><h2>Mi suerte real</h2><p class="cap" style="margin:0 0 10px">Elige la recompensa en la lista de la izquierda, escribe cuántos cofres has abierto y cuántas veces te ha salido. Usa la probabilidad oficial. Todas las recompensas salvo el Gizmo solo pueden salir una vez por jugador, así que en ellas el valor queda fijo en 1.</p><div class="lkf"><div><label for="lkn">Cofres que he abierto</label><input id="lkn" class="ni" type="number" min="1" max="1000000" step="1" value="1000"></div><div><label for="lkk">Veces que me ha salido</label><input id="lkk" class="ni" type="number" min="0" step="1" value="0"></div></div><div class="verd" id="lkv"></div><div class="stats" id="lks"></div><svg id="c4" viewBox="0 0 600 260" role="img" aria-label="Probabilidad de cada número de salidas" style="margin-top:14px"></svg><p class="cap">Barras: probabilidad de que la recompensa salga cada número de veces con tus cofres. La barra amarilla es tu resultado.</p></div>
+  <div class="card" id="sqc" style="margin-top:16px" hidden><h2>Efecto del tamaño de la tripulación</h2><div class="proj" style="background:var(--field);border-color:var(--line)"><div class="t" style="color:var(--muted)">Acceso a la Tienda Pirata · probabilidad por jugador</div><span id="sqg" style="display:contents"></span></div></div>
+  <div class="card" id="pcc" style="margin-top:16px"><h2>Cofres necesarios para conseguirla al menos una vez</h2>
+    <div class="proj" style="background:var(--field);border-color:var(--line)"><div class="t" style="color:var(--muted)" id="ptt"></div>
+      <div><div class="k">50% de suerte</div><div class="v" id="q50"></div></div><div><div class="k">90% de suerte</div><div class="v" id="q90"></div></div><div><div class="k">99% de suerte</div><div class="v" id="q99"></div></div><div><div class="k">99,9% de suerte</div><div class="v" id="q999"></div></div></div></div>
+</section>
+</div>
+</main>
+<script>
+const R=[
+{n:'Atuendo dorado semanal',o:1562500,c:'#e0a800'},
+{n:'Acceso a la Tienda Pirata',o:137500,c:'#ff7a1a'},
+{n:'Vehículo y calcomanía semanal',o:7813,c:'#a23cf0'},
+{n:'Pico o accesorio mochilero semanal',o:568,c:'#2b8fe8'},
+{n:'Jam Track semanal',o:391,c:'#e63f94'},
+{n:'Pantalla de carga semanal',o:272,c:'#2fb868'},
+{n:'Gizmo (cualquiera)',o:127,c:'#7b86a8'}];
+const $=id=>document.getElementById(id);
+const f=x=>(x<100&&x%1?x.toLocaleString('es-ES',{maximumFractionDigits:2}):Math.round(x).toLocaleString('es-ES'));
+const pc=x=>x===0?'0 %':(x*100).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:x<.01?4:2})+' %';
+const big=x=>x>=1e9?(x/1e9).toLocaleString('es-ES',{maximumFractionDigits:2})+' MM':x>=1e6?(x/1e6).toLocaleString('es-ES',{maximumFractionDigits:2})+' M':f(x);
+const ab=x=>x>=1e6?(+(x/1e6).toFixed(1))+'M':x>=1e3?(+(x/1e3).toFixed(x>=1e4?0:1))+'k':String(+x.toFixed(x<10?2:0));
+function dur(s){s=Math.round(s);const d=Math.floor(s/86400),h=Math.floor(s%86400/3600),m=Math.floor(s%3600/60),r=s%60;
+ if(d)return d+'d '+h+'h';if(h)return h+'h '+m+'m';if(m)return m+'m '+r+'s';return r+'s';}
+const need=(p,c)=>Math.max(1,Math.ceil(Math.log1p(-c)/Math.log1p(-p)));
+const fill=(id,a,d)=>a.forEach(([v,t])=>{const o=document.createElement('option');o.value=v;o.textContent=t;if(v===d)o.selected=true;$(id).appendChild(o)});
+fill('nP',[[1000,'1.000 jugadores'],[10000,'10.000 jugadores'],[100000,'100.000 jugadores'],[1000000,'1.000.000 de jugadores'],[5000000,'5.000.000 de jugadores']],1000000);
+fill('nC',[[100,'100 cofres'],[500,'500 cofres'],[1000,'1.000 cofres'],[5000,'5.000 cofres'],[10000,'10.000 cofres'],[50000,'50.000 cofres'],[137500,'137.500 cofres'],[500000,'500.000 cofres'],[1562500,'1.562.500 cofres']],5000);
+fill('tI',[[1,'Cada 1 segundo'],[5,'Cada 5 segundos'],[10,'Cada 10 segundos'],[30,'Cada 30 segundos'],[60,'Cada 60 segundos']],10);
+fill('sq',[[1,'Solo'],[2,'Dúo · 2 jugadores'],[3,'Trío · 3 jugadores'],[4,'Escuadra · 4 jugadores']],1);
+fill('sp',[['smooth','Suave · conteo visible'],['fast','Rápida'],['instant','Instantánea']],'smooth');
+let sel=1,mode='fixed',runId=0,pts=[],hist=new Uint32Array(40),cnt=0;
+R.forEach((r,i)=>{const b=document.createElement('button');b.className='chip';b.style.setProperty('--rc',r.c);
+ b.innerHTML=`<i></i><span></span><small>1:${f(r.o)}</small>`;b.querySelector('span').textContent=r.n;
+ b.onclick=()=>{sel=i;reset()};$('chips').appendChild(b)});
+document.querySelectorAll('[data-mu]').forEach(b=>b.onclick=()=>{$('mu').value=b.dataset.mu;reset()});
+$('mu').oninput=()=>reset();
+const TXT={
+ fixed:{k:['Ganadores únicos esperados','Probabilidad por jugador','Tiempo por jugador','Cofres totales entre todos'],
+  l:['Jugadores con la recompensa','Jugadores sin ella','Tasa de victoria simulada','Ganadores esperados'],
+  d:['Al menos una vez','Abrieron todo el presupuesto sin ella','Ganadores entre simulados','Probabilidad teórica × población']},
+ until:{k:['Media esperada (cofres)','Mediana teórica (cofres)','Tiempo medio por jugador','Cofres totales esperados'],
+  l:['Media simulada','Mediana simulada','Percentil 90','Peor caso'],
+  d:['Cofres hasta la primera','La mitad necesitó menos','9 de cada 10 la logran antes','El jugador con peor suerte']}};
+function P(){const N=+$('nP').value,c=+$('nC').value,t=+$('tI').value,m=Math.max(.01,+$('mu').value||1),S=sel===1?+$('sq').value:1,p0=Math.min(.999999,m/R[sel].o),lp0=Math.log1p(-p0),lp=lp0*S,p=-Math.expm1(lp),o=1/p;return{N,c,t,o,p,lp,q:-Math.expm1(c*lp),S,p0,lp0,m}}
+/* gráficas */
+const W=600,H=260,L=48,RR=12,T=14,B=30;let PW=W-L-RR,PH=H-T-B,ax={};
+const sx=v=>L+(v-ax.x0)/(ax.x1-ax.x0)*PW,sy=v=>T+PH-(v-ax.y0)/(ax.y1-ax.y0)*PH,cl=(v,a,b)=>Math.min(b,Math.max(a,v));
+function axes(xf,yf){let s='';for(let i=0;i<=4;i++){const xv=ax.x0+(ax.x1-ax.x0)*i/4,yv=ax.y0+(ax.y1-ax.y0)*i/4,y=sy(yv);
+ s+=`<text x="${sx(xv)}" y="${H-10}" text-anchor="middle">${xf(xv)}</text><line class="gl" x1="${L}" x2="${W-RR}" y1="${y}" y2="${y}"/>`+(yf?`<text x="${L-6}" y="${y+4}" text-anchor="end">${yf(yv)}</text>`:'')}return s}
+function charts(done){
+ const {N,c,o,p,lp,q}=P(),col=R[sel].c;
+ /* 1 curva */
+ let xm=need(p,.999);if(mode==='fixed')xm=Math.max(xm,c*1.15);
+ ax={x0:0,x1:xm,y0:0,y1:1};let d='';for(let i=0;i<=100;i++){const n=xm*i/100;d+=(i?'L':'M')+sx(n).toFixed(1)+' '+sy(-Math.expm1(n*lp)).toFixed(1)}
+ let s=axes(ab,v=>Math.round(v*100)+'%')+`<path d="${d}L${sx(xm)} ${sy(0)}L${sx(0)} ${sy(0)}Z" fill="${col}" opacity=".16"/><path d="${d}" fill="none" stroke="${col}" stroke-width="3"/>`;
+ [.5,.9,.99].forEach(g=>{const n=need(p,g);s+=`<circle cx="${sx(n)}" cy="${sy(g)}" r="4.5" fill="${col}"/><text x="${sx(n)+7}" y="${sy(g)+15}">${g*100}%</text>`});
+ if(mode==='fixed'){const x=sx(c);s+=`<line x1="${x}" x2="${x}" y1="${T}" y2="${T+PH}" stroke="#ffb400" stroke-width="2" stroke-dasharray="5 4"/><text x="${x>W-130?x-6:x+6}" y="${T+14}" text-anchor="${x>W-130?'end':'start'}">${f(c)} cofres: ${pc(q)}</text>`}
+ $('c1').innerHTML=s;
+ /* 2 convergencia */
+ const th=mode==='fixed'?q:o;ax={x0:0,x1:N,y0:th*.5,y1:th*1.5};
+ const fy=mode==='fixed'?v=>(v*100).toLocaleString('es-ES',{maximumFractionDigits:2})+'%':v=>f(v);
+ s=axes(ab,fy);const ty=sy(th);s+=`<line x1="${L}" x2="${W-RR}" y1="${ty}" y2="${ty}" stroke="#ffb400" stroke-width="2" stroke-dasharray="6 4"/>`;
+ if(pts.length){s+=`<polyline fill="none" stroke="${col}" stroke-width="2.5" stroke-linejoin="round" points="${pts.map(a=>sx(a[0]).toFixed(1)+','+sy(cl(a[1],ax.y0,ax.y1)).toFixed(1)).join(' ')}"/>`}
+ $('c2').innerHTML=s;
+ /* 3 histograma */
+ if(mode==='until'){const xh=need(p,.99),bw=xh/40;ax={x0:0,x1:xh,y0:0,y1:p*1.15};PW=1200-L-RR;
+  const x1=v=>L+(v/xh)*PW;let g='';for(let i=0;i<=4;i++){const v=xh*i/4;g+=`<text x="${x1(v)}" y="${H-10}" text-anchor="middle">${ab(v)}</text>`;}
+  for(let i=0;i<=4;i++){const y=T+PH-PH*i/4;g+=`<line class="gl" x1="${L}" x2="${1200-RR}" y1="${y}" y2="${y}"/>`}
+  const tot=cnt||1;for(let b=0;b<40;b++){const h=hist[b]/tot/bw,y=sy(h);g+=`<rect x="${x1(b*bw)+1}" y="${Math.min(y,T+PH)}" width="${PW/40-2}" height="${Math.max(0,T+PH-y)}" fill="${col}" opacity=".75"/>`}
+  let t='';for(let i=0;i<=120;i++){const k=xh*i/120;t+=(i?'L':'M')+x1(k).toFixed(1)+' '+sy(p*Math.exp(k*lp)).toFixed(1)}
+  g+=`<path d="${t}" fill="none" stroke="#ffb400" stroke-width="3"/>`;$('c3').innerHTML=g;PW=W-L-RR}
+}
+function proj(){
+ const {N,c,t,o,p,q,S,m}=P(),T_=TXT[mode]||TXT.fixed;
+ $('wpn').textContent=R[sel].n;$('wpo').textContent='1 entre '+f(R[sel].o)+' cofres';$('wp').style.setProperty('--rc',R[sel].c);$('ttl').textContent='Simulando: '+R[sel].n+(S>1?' · tripulación de '+S:'')+' · 1 entre '+f(o)+(m!==1?' · multiplicador x'+f(m):'');
+ [1,2,3,4].forEach(i=>{$('k'+i).textContent=T_.k[i-1];$('l'+i).textContent=T_.l[i-1];$('d'+i).textContent=T_.d[i-1]});
+ $('nC').disabled=mode==='until';$('hc').hidden=mode!=='until';
+ $('h2c').textContent=mode==='fixed'?'Convergencia de la tasa de victoria':'Convergencia de la media de cofres';
+ $('cap2').textContent='Línea de color: resultado simulado. Línea amarilla: valor teórico.';
+ if(mode==='fixed'){$('v1').textContent=f(N*q);$('v2').textContent=pc(q);$('v3').textContent=dur(c*t);$('v4').textContent=big(N*c)}
+ else{$('v1').textContent=f(o);$('v2').textContent=f(Math.LN2*o);$('v3').textContent=dur(o*t);$('v4').textContent=big(N*o)}
+ $('pt').textContent='0 / '+f(N);
+ $('ptt').textContent='Con probabilidad 1 entre '+f(o)+' por cofre';
+ [['q50',.5],['q90',.9],['q99',.99],['q999',.999]].forEach(([id,g])=>$(id).textContent=f(need(p,g)));
+ document.querySelectorAll('.chip').forEach((b,i)=>b.classList.toggle('on',i===sel));
+ squadUI();
+}
+function squadUI(){
+ const on=sel===1;$('sq').disabled=!on;$('sqc').hidden=!on;
+ $('sqn').textContent=on?'Si un compañero encuentra la ficha, todo el equipo obtiene el acceso. Se supone que cada miembro abre los mismos cofres.':'El reparto en equipo solo aplica al Acceso a la Tienda Pirata.';
+ if(!on)return;
+ const {c,lp0}=P();
+ $('sqg').innerHTML=[1,2,3,4].map(S=>{const lp=lp0*S,pp=-Math.expm1(lp);return `<div><div class="k">${['Solo','Dúo','Trío','Escuadra'][S-1]}</div><div class="v">${pc(-Math.expm1(c*lp))}</div><div class="k">en ${f(c)} cofres cada uno · mediana ${f(need(pp,.5))} cofres</div></div>`}).join('');
+}
+function luckUI(){
+ const on=mode==='luck';
+ $('simc').style.display=on?'none':'';$('chs').style.display=on?'none':'';$('pcc').style.display=on?'none':'';$('lk').style.display=on?'':'none';$('go').hidden=on;
+ ['nP','nC','tI','sp','sq','mu'].forEach(id=>{if(on)$(id).disabled=true});
+ if(!on)['nP','tI','sp','mu'].forEach(id=>$(id).disabled=false);
+ document.querySelectorAll('[data-mu]').forEach(b=>b.disabled=on);
+ if(on){$('sqc').hidden=true;luck()}
+}
+function luck(){
+ if(sel!==6){$('lkk').value=1;$('lkk').disabled=true}else $('lkk').disabled=false;
+ const o=R[sel].o,p=1/o,lp=Math.log1p(-p),lr=Math.log(p)-lp;
+ const cap=sel!==6,n=Math.min(1e6,Math.max(1,Math.floor(+$('lkn').value)||1)),k=Math.min(n,cap?1:200000,Math.max(0,Math.floor(+$('lkk').value)||0));
+ const mean=n*p,sd=Math.sqrt(n*p*(1-p));
+ let lo=Math.max(0,Math.floor(Math.min(k,mean-3.5*sd))-1),hi=Math.ceil(Math.max(k,mean+3.5*sd))+1;
+ if(hi-lo>800)hi=lo+800;if(cap){lo=0;hi=1}$('lkk').max=cap?1:200000;
+ const K=Math.min(n,Math.max(k,hi,Math.ceil(mean+6*sd)+3));
+ let lt=n*lp;const pm=[Math.exp(lt)];
+ for(let j=0;j<K;j++){lt+=(n-j>0?Math.log((n-j)/(j+1)):-Infinity)+lr;pm.push(Math.exp(lt))}
+ if(cap){pm.length=0;pm.push(Math.exp(n*lp),-Math.expm1(n*lp))}
+ let worse=0;for(let j=0;j<k&&j<pm.length;j++)worse+=pm[j];
+ let atL=0;for(let j=k;j<pm.length;j++)atL+=pm[j];
+ atL=Math.min(1,atL);const pk=pm[k]||0,better=Math.max(0,atL-pk);
+ let v;
+ if(k===0)v=`Con ${f(n)} cofres, el ${pc(pk)} de los jugadores tampoco la habría conseguido.`;
+ else if(worse>=better)v=`Has tenido más suerte que el ${pc(worse)} de los jugadores.`;
+ else v=`Has tenido menos suerte que el ${pc(better)} de los jugadores.`;
+ $('lkv').textContent=v;
+ const n90=need(p,.9);
+ const st=[cap?['Probabilidad de tenerla',pc(pm[1]),'Con tus '+f(n)+' cofres (solo sale una vez)']:['Salidas esperadas',f(mean),'Con tus '+f(n)+' cofres, de media'],['Tu resultado exacto',pc(pk),'Probabilidad de que salga justo '+f(k)+(k===1?' vez':' veces')],['Tantas como tú o más',pc(atL),'Jugadores con '+f(k)+' o más'],['Cofres para el 90%',f(n90),n90>n?'Te faltarían '+f(n90-n)+' para llegar':'Ya los has superado']];
+ $('lks').innerHTML=st.map(a=>`<div class="st"><div class="l">${a[0]}</div><div class="v">${a[1]}</div><div class="k">${a[2]}</div></div>`).join('');
+ let ym=0;for(let j=lo;j<=hi&&j<pm.length;j++)ym=Math.max(ym,pm[j]);
+ ax={x0:lo-.5,x1:hi+.5,y0:0,y1:ym*1.1||1};
+ const bw=Math.max(1,PW/(hi-lo+1)-1);
+ let s=axes(cap?(x=>Number.isInteger(x)&&x>=0&&x<=1?String(x):''):(x=>String(Math.max(0,Math.round(x)))),y=>(y*100).toLocaleString('es-ES',{maximumFractionDigits:y<.1?1:0})+'%');
+ for(let j=lo;j<=hi&&j<pm.length;j++){const y=sy(pm[j]);s+=`<rect x="${(sx(j-.5)+.5).toFixed(1)}" y="${y.toFixed(1)}" width="${bw.toFixed(1)}" height="${Math.max(0,T+PH-y).toFixed(1)}" fill="${j===k?'#ffb400':R[sel].c}" opacity="${j===k?1:.75}"/>`}
+ $('c4').innerHTML=s;
+}
+$('lkn').oninput=luck;$('lkk').oninput=luck;
+function reset(){runId++;pts=[];hist.fill(0);cnt=0;proj();luckUI();charts(0);$('pb').style.width='0';$('badge').textContent='Listo';$('badge').className='badge';[1,2,3,4].forEach(i=>$('s'+i).textContent='–')}
+function run(){
+ const my=++runId,{N,c,o,p,lp,q}=P(),sp=$('sp').value,chunk=sp==='instant'?N:Math.max(1000,Math.ceil(N/(sp==='fast'?20:120))),S=Math.ceil(N/100);
+ const xh=need(p,.99),bw=xh/40;let done=0,wins=0,sum=0,mn=Infinity,mx=0;pts=[];hist.fill(0);cnt=0;
+ const arr=mode==='until'?new Float32Array(N):null;
+ $('badge').textContent='Simulando';$('badge').className='badge run';
+ (function step(){
+  if(my!==runId)return;
+  const target=Math.min(N,done+chunk);
+  while(done<target){const e=Math.min(target,(Math.floor(done/S)+1)*S);
+   if(mode==='fixed'){for(;done<e;done++)if(Math.random()<q)wins++;pts.push([done,wins/done])}
+   else{for(;done<e;done++){const k=Math.ceil(Math.log1p(-Math.random())/lp)||1;arr[done]=k;sum+=k;if(k<mn)mn=k;if(k>mx)mx=k;const b=Math.floor(k/bw);if(b<40)hist[b]++}cnt=done;pts.push([done,sum/done])}}
+  $('pb').style.width=(done/N*100)+'%';$('pt').textContent=f(done)+' / '+f(N);
+  if(mode==='fixed'){$('s1').textContent=f(wins);$('s2').textContent=f(done-wins);$('s3').textContent=pc(wins/done);$('s4').textContent=f(N*q)}
+  else{$('s1').textContent=f(sum/done);$('s4').textContent=f(mx);$('d4').textContent='Mejor caso: '+f(mn)+' cofres'}
+  charts(done);
+  if(done<N)requestAnimationFrame(step);
+  else{if(mode==='until'){arr.sort();$('s2').textContent=f(arr[Math.floor(N*.5)]);$('s3').textContent=f(arr[Math.min(N-1,Math.floor(N*.9))])}
+   $('badge').textContent='Completado';$('badge').className='badge'}
+ })();
+}
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x===b));mode=b.dataset.m;reset()});
+['nP','nC','tI','mu','sq'].forEach(id=>$(id).onchange=reset);
+$('go').onclick=run;reset();
+</script>
+</body>
+</html>
